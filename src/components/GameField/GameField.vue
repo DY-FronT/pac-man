@@ -1,5 +1,7 @@
 <template>
-  <div class="gameField">
+  <div
+    class="gameField"
+    @click="getFocus">
     <div
       v-for="(row, rowIndex) in table"
       :key="rowIndex"
@@ -14,13 +16,18 @@
           class="gameField__t-shaped" />
       </div>
     </div>
+    <PacMan :gamingField="table" />
   </div>
 </template>
 
 <script>
+import PacMan from '@/components/PacMan.vue'
 import { field } from '@/components/GameField/data.js'
 
 export default {
+  components: {
+    PacMan
+  },
   data() {
     return {
       table: field
@@ -128,12 +135,22 @@ export default {
       if(classNames) {
         return ['top-left-right', 'bottom-top-left', 'bottom-top-right'].some(className => classNames.split(' ').includes(className));
       }
+    },
+    getFocus() {
+      this.$children[0].getFocus()
     }
-  },
+  }
 };
 </script>
 
 <style lang="scss">
+.gameField {
+  max-width: 56rem;
+  width: 100%;
+  margin: 0 auto;
+  position: relative;
+}
+
 .gameField__row {
   display: flex;
   justify-content: center;
