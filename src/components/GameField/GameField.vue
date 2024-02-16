@@ -1,28 +1,34 @@
 <template>
   <div
     class="gameField"
+    
     @click="getFocus">
-    <div
-      v-for="(row, rowIndex) in table"
-      :key="rowIndex"
-      class="gameField__row">
+    <div class="gameField__wrapper">
       <div
-        v-for="(cell, cellIndex) in row"
-        :key="cellIndex"
-        class="gameField__box"
-        :class="getLineClass(row, rowIndex, cell, cellIndex)">
+        v-for="(row, rowIndex) in table"
+        :key="rowIndex"
+        class="gameField__row">
         <div
-          v-if="isShow(getLineClass(row, rowIndex, cell, cellIndex))"
-          class="gameField__t-shaped" />
+          v-for="(cell, cellIndex) in row"
+          :key="cellIndex"
+          class="gameField__box"
+          :class="getLineClass(row, rowIndex, cell, cellIndex)">
+          <div
+            v-if="isShow(getLineClass(row, rowIndex, cell, cellIndex))"
+            class="gameField__t-shaped" />
+        </div>
       </div>
+      <PacMan :gamingField="table" />
     </div>
-    <PacMan :gamingField="table" />
+    <div ref="swipeElement" class="gameField__swipe"></div>
   </div>
 </template>
 
 <script>
 import PacMan from '@/components/PacMan.vue'
 import { field } from '@/components/GameField/data.js'
+
+import Hammer from 'hammerjs'
 
 export default {
   components: {
@@ -138,8 +144,36 @@ export default {
     },
     getFocus() {
       this.$children[0].getFocus()
-    }
-  }
+    },
+    getSwipeDirection(event) {
+      const deltaX = event.deltaX;
+      const deltaY = event.deltaY;
+
+      if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        return deltaX > 0 ? 'd' : 'a';
+      } else {
+        return deltaY > 0 ? 's' : 'w';
+      }
+    },
+    handleSwipe(direction) {
+      this.$children[0].handleKeyDown({key: direction})
+    },
+   },
+   mounted() {
+    const swipeElement = this.$refs.swipeElement
+    const hammer = new Hammer(swipeElement)
+
+    hammer.get('pan').set({ direction: Hammer.DIRECTION_ALL })
+
+    hammer.on('panleft panright panup pandown', (event) => {
+      event.preventDefault()
+
+      const direction = this.getSwipeDirection(event)
+      if (direction) {
+        this.handleSwipe(direction)
+      }
+    })
+  },
 };
 </script>
 
@@ -147,8 +181,25 @@ export default {
 .gameField {
   max-width: 56rem;
   width: 100%;
-  margin: 0 auto;
+  margin: 2.4rem auto 0;
   position: relative;
+  overflow: hidden;
+
+  @include laptops {
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  @include phones {
+    max-width: 33.6rem;
+  }
+}
+
+.gameField__wrapper {
+  @include laptops {
+    margin-bottom: 2.4rem;
+  }
 }
 
 .gameField__row {
@@ -160,6 +211,11 @@ export default {
   width: 2rem;
   height: 2rem;
   position: relative;
+
+  @include phones {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
 
   &::before,
   &::after {
@@ -183,6 +239,22 @@ export default {
   &::after {
     bottom: 30%;
   }
+
+  @include phones {
+    &::before,
+    &::after {
+      width: 1.2rem;
+      height: .2rem;
+    }
+
+    &::before {
+      top: 10%;
+    }
+
+    &::after {
+      bottom: 10%;
+    }
+  }
 }
 
 .vertical {
@@ -199,6 +271,23 @@ export default {
 
   &::after {
     right: 30%;
+  }
+
+  @include phones {
+    &::before,
+    &::after {
+      width: .2rem;
+      height: 1.2rem;
+      background: $colorBorderLine;
+    }
+
+    &::before {
+      left: 10%;
+    }
+
+    &::after {
+      right: 10%;
+    }
   }
 }
 
@@ -223,6 +312,20 @@ export default {
       border-top: 2px solid $colorBorderLine;
       border-right: 2px solid $colorBorderLine;
       top: 1.2rem;
+    }
+
+    @include phones {
+      &::before {
+        width: .9rem;
+        height: .9rem;
+        top: .1rem;
+      }
+
+      &::after {
+        top: .9rem;
+        width: .1rem;
+        height: .1rem;
+      }
     }
   }
 
@@ -249,6 +352,20 @@ export default {
       top: 1.2rem;
       right: 0;
     }
+
+    @include phones {
+      &::before {
+        top: .1rem;
+        height: .9rem;
+        width: .9rem;
+      }
+
+      &::after {
+        top: .9rem;
+        width: .1rem;
+        height: .1rem;
+      }
+    }
   }
 
   &.bottom-right {
@@ -271,6 +388,19 @@ export default {
       border-bottom: 2px solid $colorBorderLine;
       border-left: 2px solid $colorBorderLine;
     }
+
+    @include phones {
+      &::before {
+        width: .9rem;
+        height: .9rem;
+        bottom: .1rem;
+      }
+
+      &::after {
+        width: .1rem;
+        height: .1rem;
+      }
+    }
   }
 
   &.bottom-left {
@@ -291,6 +421,18 @@ export default {
       height: .6rem;
       border-right: 2px solid $colorBorderLine;
       border-bottom: 2px solid $colorBorderLine;
+    }
+
+    @include phones {
+      &::before {
+        width: .9rem;
+        height: .9rem;
+      }
+
+      &::after {
+        width: .1rem;
+        height: .1rem;
+      }
     }
   }
 
@@ -313,6 +455,14 @@ export default {
       border-left: 2px solid $colorBorderLine;
       border-radius: 15px 0 0 0;
     }
+
+    @include phones {
+      &::before,
+      &::after {
+        width: .1rem;
+        height: .1rem;
+      }
+    }
     
     .gameField__t-shaped {
       &::before {
@@ -320,6 +470,13 @@ export default {
         height: .2rem;
         border-top: 2px solid $colorBorderLine;
         top: .6rem;
+      }
+
+      @include phones {
+        &::before {
+          width: 1.2rem;
+          top: .1rem;
+        }
       }
     }
   }
@@ -343,6 +500,14 @@ export default {
       border-radius: 15px 0 0 0;
       bottom: 0;
     }
+
+    @include phones {
+      &::before,
+      &::after {
+        width: .1rem;
+        height: .1rem;
+      }
+    }
     
     .gameField__t-shaped {
       &::after {
@@ -350,6 +515,13 @@ export default {
         height: 2rem;
         border-left: 2px solid $colorBorderLine;
         left: 30%;
+      }
+
+      @include phones {
+        &::after {
+          height: 1.2rem;
+          left: 10%;
+        }
       }
     }
   }
@@ -372,6 +544,14 @@ export default {
       border-radius: 0 15px 0 0;
       bottom: 0;
     }
+
+    @include phones {
+      &::before,
+      &::after {
+        width: .1rem;
+        height: .1rem;
+      }
+    }
     
     .gameField__t-shaped {
       &::after {
@@ -379,6 +559,13 @@ export default {
         height: 2rem;
         border-right: 2px solid $colorBorderLine;
         right: 30%;
+      }
+
+      @include phones {
+        &::after {
+          height: 1.2rem;
+          right: 10%;
+        }
       }
     }
   }
@@ -430,5 +617,12 @@ export default {
     position: absolute;
     content: '';
   }
+}
+
+.gameField__swipe {
+  width: 100%;
+  border: 1px solid $colorBorderLine;
+  flex-grow: 1;
+  margin-bottom: 2.4rem;
 }
 </style>

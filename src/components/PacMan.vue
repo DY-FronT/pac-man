@@ -3,8 +3,8 @@
     class="pacMan"
     :class="[direction, {move: isMoving}]"
     :style="{
-      left: coordinateX * 2 + 'rem',
-      top: coordinateY * 2 + 'rem'
+      left: coordinateX * pacManSize + 'rem',
+      top: coordinateY * pacManSize + 'rem'
     }"
     tabindex="0"
     @keydown="handleKeyDown($event)">
@@ -13,6 +13,8 @@
 </template>
 
 <script>
+import useScreenWidth from '@/mixins/useScreenWidth.js'
+
 export default {
   props: {
     gamingField: {
@@ -20,6 +22,7 @@ export default {
       desc: 'Массив с координатами игрового поля'
     }
   },
+  mixins: [useScreenWidth],
   data() {
     return {
       coordinateX: 1,
@@ -62,13 +65,11 @@ export default {
       const newPosY = this.coordinateY + deltaY
 
       if (this.isValidMove(newPosX, newPosY)) {
-        // Если движение уже начато и направление изменилось, меняем направление
         if (this.isMoving && (this.currentDirection.deltaX !== deltaX || this.currentDirection.deltaY !== deltaY)) {
           this.stopContinuousMovement()
           this.currentDirection = { deltaX, deltaY };
           this.startContinuousMovement()
         } else if (!this.isMoving) {
-          // Если движение еще не начато, изменяем направление и запускаем движение
           this.currentDirection = { deltaX, deltaY }
           this.startContinuousMovement()
         }
@@ -115,6 +116,9 @@ export default {
   computed: {
     direction() {
       return this.directionMove
+    },
+    pacManSize() {
+      return this.screenWidth >= this.screenWidthBreakpoints.phones ? 2 : 1.2
     }
   },
   mounted() {
@@ -130,7 +134,7 @@ export default {
   background-color: $colorPacMan;
   position: absolute;
   border-radius: 50%;
-  transition: top .5s linear, bottom .5s linear, right .5s linear, left .5s linear;
+  transition: top .3s linear, bottom .3s linear, right .3s linear, left .3s linear;
   outline: none;
 
   &::before {
@@ -141,6 +145,15 @@ export default {
     background: $colorBlack;
     right: 0;
     top: 50%;
+  }
+
+  @include phones {
+    width: 1.2rem;
+    height: 1.2rem;
+
+    &::before {
+      width: .6rem;
+    }
   }
 
   &.move {
@@ -159,6 +172,11 @@ export default {
   background: $colorBlack;
   top: 20%;
   left: 50%;
+
+  @include phones {
+    width: .2rem;
+    height: .2rem;
+  }
 }
 
 .move {
