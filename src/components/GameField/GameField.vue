@@ -1,7 +1,7 @@
 <template>
   <div
     class="gameField"
-    
+
     @click="getFocus">
     <div class="gameField__wrapper">
       <div
@@ -12,13 +12,18 @@
           v-for="(cell, cellIndex) in row"
           :key="cellIndex"
           class="gameField__box"
-          :class="getLineClass(row, rowIndex, cell, cellIndex)">
+          :class="[getLineClass(row, rowIndex, cell, cellIndex), {coin: coinS[rowIndex][cellIndex] }]">
           <div
             v-if="isShow(getLineClass(row, rowIndex, cell, cellIndex))"
             class="gameField__t-shaped" />
         </div>
       </div>
-      <PacMan :gamingField="table" />
+      <div class="gameField__score">
+        Score: {{ totalScore }}
+      </div>
+      <PacMan
+        :gamingField="table"
+        @moving="getCoin" />
     </div>
     <div ref="swipeElement" class="gameField__swipe"></div>
   </div>
@@ -26,7 +31,7 @@
 
 <script>
 import PacMan from '@/components/PacMan.vue'
-import { field } from '@/components/GameField/data.js'
+import { field, coins } from '@/components/GameField/data.js'
 
 import Hammer from 'hammerjs'
 
@@ -36,7 +41,9 @@ export default {
   },
   data() {
     return {
-      table: field
+      table: field,
+      coinS: coins,
+      totalScore: 0
     }
   },
   methods: {
@@ -118,7 +125,7 @@ export default {
               result = `corner ${sides[inactiveDiagonal]}`
             }
           } else {
-            return false;
+            return false
           }
         }
         return result
@@ -139,7 +146,7 @@ export default {
     },
     isShow(classNames) {
       if(classNames) {
-        return ['top-left-right', 'bottom-top-left', 'bottom-top-right'].some(className => classNames.split(' ').includes(className));
+        return ['top-left-right', 'bottom-top-left', 'bottom-top-right'].some(className => classNames.split(' ').includes(className))
       }
     },
     getFocus() {
@@ -150,14 +157,27 @@ export default {
       const deltaY = event.deltaY;
 
       if (Math.abs(deltaX) > Math.abs(deltaY)) {
-        return deltaX > 0 ? 'd' : 'a';
+        return deltaX > 0 ? 'd' : 'a'
       } else {
-        return deltaY > 0 ? 's' : 'w';
+        return deltaY > 0 ? 's' : 'w'
       }
     },
     handleSwipe(direction) {
       this.$children[0].handleKeyDown({key: direction})
     },
+    getCoin(newPosX, newPosY) {
+      const currentRow = this.coinS[newPosY]
+      if (currentRow[newPosX]) {
+        setTimeout(() => {
+          this.$set(this.coinS[newPosY], newPosX, 0)
+          this.totalScore += 10
+          if (this.totalScore >= 2450) {
+            this.$children[0].stopContinuousMovement()
+            alert('Поздравляю, Вы победили!')
+          }
+        }, 200);
+      }
+    }
    },
    mounted() {
     const swipeElement = this.$refs.swipeElement
@@ -173,7 +193,7 @@ export default {
         this.handleSwipe(direction)
       }
     })
-  },
+  }
 };
 </script>
 
@@ -609,6 +629,28 @@ export default {
   }
 }
 
+.coin {
+  &::before {
+    position: absolute;
+    content: '';
+    width: .6rem;
+    height: .6rem;
+    background: $colorCoin;
+    border-radius: 50%;
+    top: .7rem;
+    left: .7rem;
+  }
+
+  @include phones {
+    &::before {
+      width: .4rem;
+      height: .4rem;
+      top: .4rem;
+      left: .4rem;
+    }
+  }
+}
+
 .gameField__t-shaped {
   position: relative;
 
@@ -617,6 +659,12 @@ export default {
     position: absolute;
     content: '';
   }
+}
+
+.gameField__score {
+  font-size: 4.8rem;
+  line-height: 5.6regm;
+  color: $colorBorderLine;
 }
 
 .gameField__swipe {

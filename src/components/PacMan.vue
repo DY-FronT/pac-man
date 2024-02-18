@@ -1,7 +1,7 @@
 <template>
   <div
     class="pacMan"
-    :class="[direction, {move: isMoving}]"
+    :class="[direction, { move: isMoving, portal: onPortal }]"
     :style="{
       left: coordinateX * pacManSize + 'rem',
       top: coordinateY * pacManSize + 'rem'
@@ -29,7 +29,8 @@ export default {
       coordinateY: 1,
       currentDirection: { deltaX: 0, deltaY: 0 },
       directionMove: null,
-      isMoving: false
+      isMoving: false,
+      onPortal: false
     }
   },
   methods: {
@@ -67,7 +68,7 @@ export default {
       if (this.isValidMove(newPosX, newPosY)) {
         if (this.isMoving && (this.currentDirection.deltaX !== deltaX || this.currentDirection.deltaY !== deltaY)) {
           this.stopContinuousMovement()
-          this.currentDirection = { deltaX, deltaY };
+          this.currentDirection = { deltaX, deltaY }
           this.startContinuousMovement()
         } else if (!this.isMoving) {
           this.currentDirection = { deltaX, deltaY }
@@ -94,20 +95,42 @@ export default {
         this.isMoving = true
 
         this.intervalId = setInterval(() => {
-          this.movePacMan();
-        }, 300);
+          this.movePacMan()
+        }, 300)
       }
     },
     movePacMan() {
-      const newPosX = this.coordinateX + this.currentDirection.deltaX
+      let newPosX = this.coordinateX + this.currentDirection.deltaX
       const newPosY = this.coordinateY + this.currentDirection.deltaY
+      const shouldCheckPortal = this.isBeyondField(newPosX)
+
+      if (shouldCheckPortal) {
+        newPosX = this.checkPortal(newPosX)
+      }
+
+      if (this.onPortal && !shouldCheckPortal) {
+        this.onPortal = false
+      }
 
       if (this.isValidMove(newPosX, newPosY)) {
+        this.$emit('moving', newPosX, newPosY)
         this.coordinateX = newPosX
         this.coordinateY = newPosY
       } else {
         this.stopContinuousMovement()
       }
+    },
+    checkPortal(newPosX) {
+      if (newPosX === -1 || newPosX === this.gamingField[0].length) {
+        this.onPortal = true
+        newPosX = newPosX === -1 ? (this.gamingField[0].length - 1) : 0
+      } else if (this.onPortal) {
+        this.onPortal = false
+      }
+      return newPosX
+    },
+    isBeyondField(newPosX) {
+      return newPosX < 0 || newPosX >= this.gamingField[0].length
     },
     getFocus() {
       this.$el.focus()
@@ -160,6 +183,10 @@ export default {
     &::before {
       display: none;
     }
+  }
+
+  &.portal {
+    transition: none;
   }
 }
 
