@@ -1,9 +1,8 @@
 <template>
   <div
     class="gameField"
-
     @click="getFocus">
-    <div class="gameField__wrapper">
+    <div class="gameField__wrapper" ref="field">
       <div
         v-for="(row, rowIndex) in table"
         :key="rowIndex"
@@ -12,10 +11,7 @@
           v-for="(cell, cellIndex) in row"
           :key="cellIndex"
           class="gameField__box"
-          :class="[getLineClass(row, rowIndex, cell, cellIndex), {coin: coinS[rowIndex][cellIndex] }]">
-          <div
-            v-if="isShow(getLineClass(row, rowIndex, cell, cellIndex))"
-            class="gameField__t-shaped" />
+          :class="[ {coin: coins[rowIndex][cellIndex] }]">
         </div>
       </div>
       <div class="gameField__score">
@@ -42,7 +38,7 @@ export default {
   data() {
     return {
       table: field,
-      coinS: coins,
+      coins: coins,
       totalScore: 0
     }
   },
@@ -106,10 +102,10 @@ export default {
       const { upRight, upLeft, downRight, downLeft } = diagonals
 
       if ((cellLeft || cellRight) && (cellUp || cellDown)) {
-        let result = 'corner '
+        let result = ['corner']
       
         const activeSides = Object.keys(cells).filter(key => cells[key])
-        result += activeSides.map(side => sides[side]).join('-')
+        result[1] = activeSides.map(side => sides[side]).join('-')
       
         if (activeSides.length >= 3) {
           const hasOneInactiveDiagonal = Object.values(diagonals).filter(value => !value).length === 1
@@ -122,7 +118,7 @@ export default {
           ) {
             if (hasOneInactiveDiagonal) {
               const inactiveDiagonal = Object.keys(diagonals).find(key => !diagonals[key])
-              result = `corner ${sides[inactiveDiagonal]}`
+              result = ['corner', sides[inactiveDiagonal]]
             }
           } else {
             return false
@@ -145,9 +141,13 @@ export default {
       return (cellIndex === 0 && row[cellIndex + 1]) || (cellIndex === row.length - 1 && row[cellIndex - 1]) ? 'horizontal' : false
     },
     isShow(classNames) {
-      if(classNames) {
-        return ['top-left-right', 'bottom-top-left', 'bottom-top-right'].some(className => classNames.split(' ').includes(className))
-      }
+      const TShapedCorners = [
+        'top-left-right',
+        'bottom-top-left',
+        'bottom-top-right'
+      ]
+
+      return TShapedCorners.some(corner => classNames.includes(corner))
     },
     getFocus() {
       this.$children[0].getFocus()
@@ -166,10 +166,10 @@ export default {
       this.$children[0].handleKeyDown({key: direction})
     },
     getCoin(newPosX, newPosY) {
-      const currentRow = this.coinS[newPosY]
+      const currentRow = this.coins[newPosY]
       if (currentRow[newPosX]) {
         setTimeout(() => {
-          this.$set(this.coinS[newPosY], newPosX, 0)
+          this.$set(this.coins[newPosY], newPosX, 0)
           this.totalScore += 10
           if (this.totalScore >= 2450) {
             this.$children[0].stopContinuousMovement()
@@ -180,6 +180,31 @@ export default {
     }
    },
    mounted() {
+    const allElementsField = this.$refs.field.childNodes
+
+    this.table.forEach((row, rowIndex) => {
+      row.forEach((cell, cellIndex) => {
+        const currentCell = allElementsField[rowIndex].childNodes[cellIndex]
+        let className = this.getLineClass(row, rowIndex, cell, cellIndex)
+        
+        if (typeof className == 'undefined') {
+          return
+        }
+
+        if (typeof className == 'object') {
+          currentCell.classList.add(className[0], className[1])
+        } else {
+          currentCell.classList.add(className)
+        }
+
+        if (this.isShow(className)) {
+          const TShapedCorner = document.createElement('div')
+          TShapedCorner.classList.add('gameField__t-shaped')
+          currentCell.appendChild(TShapedCorner)
+        }
+      })
+    })
+    
     const swipeElement = this.$refs.swipeElement
     const hammer = new Hammer(swipeElement)
 
