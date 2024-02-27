@@ -180,6 +180,9 @@ export default {
   }
 
   &.move {
+    animation: mouth .35s infinite cubic-bezier(0.85, 0, 0.15, 1);
+    animation-direction: alternate;
+
     &::before {
       display: none;
     }
@@ -204,11 +207,6 @@ export default {
     width: .2rem;
     height: .2rem;
   }
-}
-
-.move {
-  animation: mouth .35s infinite cubic-bezier(0.85, 0, 0.15, 1);
-  animation-direction: alternate;
 }
 
 .s {

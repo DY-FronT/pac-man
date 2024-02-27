@@ -20,6 +20,7 @@
       <PacMan
         :gamingField="table"
         @moving="getCoin" />
+      <Ghost />
     </div>
     <div ref="swipeElement" class="gameField__swipe"></div>
   </div>
@@ -27,13 +28,16 @@
 
 <script>
 import PacMan from '@/components/PacMan.vue'
+import Ghost from '@/components/Ghost.vue'
+
 import { field, coins } from '@/components/GameField/data.js'
 
 import Hammer from 'hammerjs'
 
 export default {
   components: {
-    PacMan
+    PacMan,
+    Ghost
   },
   data() {
     return {
