@@ -41,30 +41,38 @@ export default {
     }),
     handleKeyDown(event) {
       const validDirection = {
-        w: {
-          deltaX: 0,
-          deltaY: -1
-        },
-        s: {
-          deltaX: 0,
-          deltaY: 1
-        },
-        a: {
-          deltaX: -1,
-          deltaY: 0
-        },
-        d: {
-          deltaX: 1,
-          deltaY: 0
-        }
+        up: ['w', 'ц', 'ArrowUp'],
+        down: ['s', 'ы', 'ArrowDown'],
+        left: ['a', 'ф', 'ArrowLeft'],
+        right: ['d', 'в', 'ArrowRight']
+      }
+    
+      const directionCoordinates = {
+        up: { deltaX: 0, deltaY: -1 },
+        down: { deltaX: 0, deltaY: 1 },
+        left: { deltaX: -1, deltaY: 0 },
+        right: { deltaX: 1, deltaY: 0 }
       }
 
-      Object.keys(validDirection).forEach(key => {
-        if (key == event.key) {
-          const currentKey = validDirection[key]
-          this.tryChangeDirection(currentKey['deltaX'], currentKey['deltaY'], event.key)
+      const currentKey = this.findValidKey(event.key, validDirection)
+
+      if (currentKey) {
+        if (currentKey.key.includes('Arrow')) {
+          event.preventDefault()
         }
-      })
+        
+        const { direction } = currentKey
+        const { deltaX, deltaY } = directionCoordinates[direction]
+        this.tryChangeDirection(deltaX, deltaY, direction)
+      }
+    },
+    findValidKey(key, directionMap) {
+      for (const direction in directionMap) {
+        if (directionMap[direction].includes(key)) {
+          return { direction, key }
+        }
+      }
+      return null
     },
     tryChangeDirection(deltaX, deltaY, direction) {
       const newPosX = this.coordinateX + deltaX
@@ -215,15 +223,15 @@ export default {
   }
 }
 
-.s {
+.down {
   transform: rotate(90deg);
 }
 
-.w {
+.up {
   transform: rotate(270deg);
 }
 
-.a {
+.left {
   transform: scale(-1, 1);
 }
 
