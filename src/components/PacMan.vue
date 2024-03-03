@@ -15,6 +15,8 @@
 <script>
 import useScreenWidth from '@/mixins/useScreenWidth.js'
 
+import { mapActions } from 'vuex'
+
 export default {
   props: {
     gamingField: {
@@ -34,6 +36,9 @@ export default {
     }
   },
   methods: {
+    ...mapActions({
+      ACTION_SET_COORDINATES: 'currentCoordinates/updatePacmanCoordinates'
+    }),
     handleKeyDown(event) {
       const validDirection = {
         w: {
@@ -116,6 +121,7 @@ export default {
         this.$emit('moving', newPosX, newPosY)
         this.coordinateX = newPosX
         this.coordinateY = newPosY
+        this.ACTION_SET_COORDINATES({x: newPosX, y: newPosY})
       } else {
         this.stopContinuousMovement()
       }
